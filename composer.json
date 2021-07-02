@@ -1,0 +1,37 @@
+{
+    "name": "designcoda/adpanel_connector",
+    "description": "Plugin for Adpanel data sending",
+    "type": "library",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Alexandra Shuvalova",
+            "email": "shuvalova.alexandra@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "DesignCoda\\AdpanelConnector\\": "src"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "DesignCoda\\AdpanelConnector\\AdpanelConnectorServiceProvider"
+            ],
+            "aliases": {
+                "Debugbar": "DesignCoda\\AdpanelConnector\\AdpanelConnectorFacade"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=5.3.0"
+    },
+    "repositories": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/Alexanyasha/adpanel-connector-laravel"
+        }
+    ]
+}
