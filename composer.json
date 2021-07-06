@@ -20,11 +20,11 @@
                 "DesignCoda\\AdpanelConnector\\AdpanelConnectorServiceProvider"
             ],
             "aliases": {
-                "Debugbar": "DesignCoda\\AdpanelConnector\\AdpanelConnectorFacade"
+                "AdpanelConnector": "DesignCoda\\AdpanelConnector\\AdpanelConnectorFacade"
             }
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "require": {
         "php": ">=5.3.0"
     },
