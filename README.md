@@ -12,7 +12,7 @@ This plugin send data of your Laravel project to Adpanel via REST API. You can a
 
 ### Composer
 ```
-composer require ...
+composer require designcoda/adpanel-connector-laravel
 ```
 
 ### Laravel
@@ -64,14 +64,14 @@ php artisan route:clear
 ```
 
 
-### Query parameters  
+## Query parameters  
 To receive data only valid auth token is required. But you can pass additional parameters such as ordering  
 `from` - created_at column starting from Y-m-d inclusive. Must be valid date  
 `to` - created_at column until Y-m-d inclusive. Must be valid date    
 `order_by` - ordering column. Ignoring if column not exists. Must be string  
-`desc` - uses only with `order_by`. Must be boolean  
+`desc` - is used only with `order_by`. Must be boolean  
   
-### Параметры запросов  
+## Параметры запросов  
 Чтобы получить данные достаточно только валидного токена. Но также можно передавать дополнительные параметры для запроса, например, сортировку   
 `from` - столбец created_at, начиная с указанной даты Y-m-d включительно. Должен быть валидной датой  
 `to` - столбец created_at, до указанной даты Y-m-d включительно. Должен быть валидной датой  
@@ -79,7 +79,7 @@ To receive data only valid auth token is required. But you can pass additional p
 `desc` - используется только в связке с `order_by`. Должен быть булевым  
 
 
-### Response example  
+## Response example  
 ```
 Array
 (
@@ -108,7 +108,7 @@ Array
 )        
 ```
 
-### Пример ответа  
+## Пример ответа  
 ```
 Array
 (
