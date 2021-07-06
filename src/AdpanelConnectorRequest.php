@@ -2,7 +2,10 @@
 
 namespace DesignCoda\AdpanelConnector;
 
+use DesignCoda\AdpanelConnector\Rules\TokenSetRule;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class AdpanelConnectorRequest extends FormRequest
 {
@@ -13,16 +16,6 @@ class AdpanelConnectorRequest extends FormRequest
      */
     public function authorize()
     {
-        // if (! backpack_auth()->check() || ! request()->has('id')) {
-        //     return false;
-        // }
-        
-        // $account = ApiAccountDetailed::find(request()->id);
-
-        // if($account) {
-        //     return ((! $account->main_report) && backpack_user()->can('update', $account));
-        // }
-        
         return true;
     }
 
@@ -32,17 +25,55 @@ class AdpanelConnectorRequest extends FormRequest
      * @return array
      */
     public function rules()
-    {
+    {       
         return [
-            // 'id' => 'required|integer',       
+            'token' => [
+                'required',
+                'string',
+                new TokenSetRule,
+                'in:' . config('adpanel_connector.auth_token'),
+            ],
+            'from' => 'sometimes|date',
+            'to' => 'sometimes|date|after_or_equal:from',
+            'order_by' => 'sometimes|string',
+            'desc' => 'sometimes|boolean',
         ];
     }
 
     public function messages()
     {
         return [
-            // 'id.required' => trans('validation.required', ['attribute' => trans('backpack::fields.id')]),
-            // 'id.integer' => trans('validation.integer', ['attribute' => trans('backpack::fields.id')]),
+            'token.required' => trans('adpanel_connector::main.validation.required', ['attribute' => trans('adpanel_connector::main.label.token')]),
+            'token.string' => trans('adpanel_connector::main.validation.string', ['attribute' => trans('adpanel_connector::main.label.token')]),
+            'token.in' => trans('adpanel_connector::main.validation.in', ['attribute' => trans('adpanel_connector::main.label.token')]),
+            'from.date' => trans('adpanel_connector::main.validation.date', ['attribute' => trans('adpanel_connector::main.label.from')]),
+            'to.date' => trans('adpanel_connector::main.validation.date', ['attribute' => trans('adpanel_connector::main.label.to')]),
+            'to.after_or_equal' => trans('adpanel_connector::main.validation.after_or_equal', 
+                [
+                    'attribute' => trans('adpanel_connector::main.label.to'), 
+                    'date' => trans('adpanel_connector::main.label.from'),
+                ]
+            ),
+            'order_by.string' => trans('adpanel_connector::main.validation.string', ['attribute' => trans('adpanel_connector::main.label.order_by')]),
+            'desc.boolean' => trans('adpanel_connector::main.validation.boolean', ['attribute' => trans('adpanel_connector::main.label.desc')]),
         ];
+    }
+
+    /**
+     * Return validation errors as json response
+     *
+     * @param Validator $validator
+     */
+    protected function failedValidation(Validator $validator)
+    {
+        $response = [
+            'status' => 'failure',
+            'status_code' => 400,
+            'message' => 'Bad Request',
+            'errors' => $validator->errors(),
+        ];
+
+        throw new HttpResponseException(response()->json($response, 400, ['Content-Type' => 'application/json;charset=UTF-8', 'Charset' => 'utf-8'],
+        JSON_UNESCAPED_UNICODE));
     }
 }

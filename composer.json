@@ -1,5 +1,5 @@
 {
-    "name": "designcoda/adpanel_connector",
+    "name": "designcoda/adpanel-connector-laravel",
     "description": "Plugin for Adpanel data sending",
     "type": "library",
     "license": "proprietary",

@@ -14,10 +14,13 @@ return [
     // Exporting tables
     'tables' => [
         // DB table name
-        'users' => [
+        'requests' => [
             // DB columns to export
-            'name',
-            'email',
+            'id',
+            'utm',
+            'created_at',
         ],
     ],
+
+    'auth_token' => env('ADPANEL_CONNECTOR_TOKEN', null),
 ];

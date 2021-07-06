@@ -2,76 +2,85 @@
 
 namespace DesignCoda\AdpanelConnector;
 
-class AdpanelConnector
-{    
-    // public static function sendError($e)
-    // {
-    //     $api_url = env('MONLOGS_API_URL');
-    //     $api_key = env('MONLOGS_API_KEY');
-        
-    //     if(! $api_key || $api_key == '') {
-    //         info("Error. Log wasn't sent to Monlogs. Enter API key");
-    //         return;
-    //     }
-        
-    //     if(! $api_url || $api_url == '') {
-    //         info("Error. Log wasn't sent to Monlogs. Enter API URL");
-    //         return;
-    //     }
-        
-    //     $data = [
-    //         'message' => $e->getMessage(),
-    //         'file' => $e->getFile(),
-    //         'line' => $e->getLine(),
-    //         'trace' => $e->getTraceAsString(),
-    //         'user_id' => auth()->id(),
-    //         'url' => request()->url(),
-    //         'site' => request()->getHttpHost(),
-    //         'api_key' => $api_key,
-    //     ];
-        
-    //     if($e instanceof NotFoundHttpException) {
-    //         if($data['message'] == '') {
-    //             $data['message'] = $data['url'] . ' not found';
-    //         }
-            
-    //         $data['referrer'] = $data['url'];
-    //     }
-        
-    //     $data_string = json_encode($data);
-    //     $auth_username = "test";
-    //     $auth_password = "test";
+use DB;
+use Illuminate\Support\Facades\Schema;
 
-    //     $ch = curl_init($api_url);
-    //     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-    //     curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
-    //     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    //     curl_setopt($ch, CURLOPT_USERPWD, "{$auth_username}:{$auth_password}");
-    //     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    //             'Content-Type: application/json',
-    //             'Accept : application/json',
-    //             'Content-Length: ' . strlen($data_string),
-    //         ]
-    //     );
+class AdpanelConnector
+{
+    protected $tables = [];
+
+    public function __construct() {
+        $config = config('adpanel_connector.tables') ?? [];
+
+        foreach($config as $table_name => $columns) {
+            $this->tables[] = [
+                'name' => $table_name,
+                'columns' => $columns,
+            ];
+        }
+    }
+
+    public function getData(array $params = []) :array
+    {
+        $data = $this->tables;
+
+        foreach($data as &$table) {
+            $columns = $this->checkColumns($table);
+            $temp_data = $this->buildQuery($table, $columns, $params);
+
+            try {
+                
+                $table['data'] = $temp_data->get();  
+
+            } catch (\Exception $e) {
+                $table['data'] = null;
+                logger($e->getFile() . ' ' . $e->getLine() . ': ' . $e->getMessage());
+            }
+        }
+
+        return $data;
+    }
+
+    private function checkColumns(array &$table) :array
+    {
+        $columns = $table['columns'];
+        foreach($columns as $key => $column) {
+            if(! Schema::connection('mysql')->hasColumn($table['name'], $column)) {
+                $table['errors'][] = trans('adpanel_connector::main.error.no_column', [
+                    'column' => $column,
+                    'table' => $table['name'],
+                ]);
+                unset($columns[$key]);
+            }
+        }
+
+        return $columns;
+    }
+
+    private function buildQuery(array &$table, array $columns, array $params)
+    {
+        $query = DB::table($table['name'])->select($columns);
         
-    //     try {
-    //         $result = curl_exec($ch);
-    //         $api_response = json_decode($result);
-            
-    //         if(isset($api_response->result) && $api_response->result == 'success') {
-    //             info('Log was sent to Monlogs');
-    //             logger(print_r($api_response, true));
-    //         } else {
-    //             info("Error. Log wasn't sent to Monlogs");
-    //             logger(print_r($api_response, true));
-    //             if(curl_errno($ch)){
-    //                 logger('Curl error: ' . curl_error($ch));
-    //             }
-    //         }
-    //     } catch(\Exception $e) {
-    //         info("Error. Log wasn't sent to Monlogs. Curl error");
-    //     }
-        
-    //     curl_close($ch);
-    // }
+        if(isset($params['from'])) {
+            $query->where('created_at', '>', date('Y-m-d H:i:s', strtotime($params['from'])));
+        }
+
+        if(isset($params['to'])) {
+            $query->where('created_at', '<=', date('Y-m-d H:i:s', strtotime($params['to'])));
+        }
+
+        if(isset($params['order_by'])) {
+            if(! Schema::connection('mysql')->hasColumn($table['name'], $params['order_by'])) {
+                $table['errors'][] = trans('adpanel_connector::main.error.no_column', [
+                    'column' => $params['order_by'],
+                    'table' => $table['name'],
+                ]);
+            } else {
+                $query->orderBy($params['order_by'], (isset($params['desc']) && $params['desc'] == true ? 'desc' : 'asc'));
+            }
+        }
+
+        return $query;
+    }
+    
 }
