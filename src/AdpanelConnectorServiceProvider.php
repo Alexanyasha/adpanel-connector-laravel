@@ -36,7 +36,7 @@ class AdpanelConnectorServiceProvider extends ServiceProvider {
     public function boot() {
         $this->publishes([
             __DIR__ . '/config/adpanel_connector.php' => config_path('adpanel_connector.php'),
-        ]);
+        ], 'adpanel-connector');
 
         $this->loadRoutesFrom(__DIR__ . '/routes/adpanel.php');
 
@@ -45,8 +45,8 @@ class AdpanelConnectorServiceProvider extends ServiceProvider {
         try {
         
             Artisan::call('vendor:publish', [
-                '--provider' => 'DesignCoda/AdpanelConnector/AdpanelConnectorProvider', 
-                '--tag' => 'config',
+                '--provider' => 'DesignCoda\AdpanelConnector\AdpanelConnectorServiceProvider', 
+                '--tag' => 'adpanel-connector',
                 '--force' => true,
             ]);
         

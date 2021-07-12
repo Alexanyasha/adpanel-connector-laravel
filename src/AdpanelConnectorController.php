@@ -11,6 +11,7 @@ class AdpanelConnectorController extends Controller
     public function index(AdpanelConnectorRequest $request) {
         $connector = new AdpanelConnector;
 
-        return '<pre>' . print_r($connector->getData($request->all()), true) . '</pre>';
+        $response = $connector->getData($request->all());
+        return response()->json($response, 200);
     }
 }

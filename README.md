@@ -19,7 +19,7 @@ composer require designcoda/adpanel-connector-laravel
 
 1. Run publishing command to copy config file to config folder.  
 ```  
-php artisan vendor:publish --provider="DesignCoda/AdpanelConnector/AdpanelConnectorProvider" --tag="config" --force  
+php artisan vendor:publish --provider="DesignCoda\AdpanelConnector\AdpanelConnectorServiceProvider" --tag="adpanel-connector" --force  
 ```  
 
 
@@ -36,15 +36,18 @@ and copy variable from console to .env file
 4. Run for clear caching  
 ```
 php artisan config:clear
+php artisan config:cache  
 php artisan route:clear
-```
+```  
+
+5. Visit in browser `yoursite.url/adpanel_connector` to see response. If you add token `yoursite.url/adpanel_connector?token=token_from_env`, you will see authorized response with data.  
 
 
 ### Laravel
 
 1. Запустите команду публикации файла с настройками в папку config  
 ```
-php artisan vendor:publish --provider="DesignCoda/AdpanelConnector/AdpanelConnectorProvider" --tag="config" --force  
+php artisan vendor:publish --provider="DesignCoda\AdpanelConnector\AdpanelConnectorServiceProvider" --tag="adpanel-connector" --force  
 ```
 
 2. Сгенерируйте токен для авторизации командой  
@@ -60,8 +63,12 @@ php artisan adpanel:generate_token
 4. Очистите кэш командами
 ```
 php artisan config:clear
+php artisan config:cache  
 php artisan route:clear
-```
+```  
+
+
+5. Откройте в браузере `yoursite.url/adpanel_connector` чтобы увидеть отклик. Если добавить токен `yoursite.url/adpanel_connector?token=token_from_env`, можно увидеть авторизованный отклик с данными.  
 
 
 ## Query parameters  
@@ -79,7 +86,21 @@ To receive data only valid auth token is required. But you can pass additional p
 `desc` - используется только в связке с `order_by`. Должен быть булевым  
 
 
-## Response example  
+## Response examples  
+```  
+{
+    "status":"failure",
+    "status_code":400,
+    "message":"Bad Request",
+    "errors": {
+        "token": [
+            "Auth token must be set in .env file. Run console command 'php artisan adpanel:generate_token' and edit your .env file or check published config file.",
+            "Token is invalid."
+        ]
+    }
+}
+```  
+
 ```
 Array
 (
@@ -108,7 +129,21 @@ Array
 )        
 ```
 
-## Пример ответа  
+## Примеры ответов  
+```  
+{
+    "status":"failure",
+    "status_code":400,
+    "message":"Bad Request",
+    "errors": {
+        "token": [
+            "Токен для авторизации должен быть указан в .env-файле. Запустите команду 'php artisan adpanel:generate_token' и внесите токен в ваш .env-файл или проверьте, опубликован ли файл конфигурации.",
+            "Параметр «Токен» неверный."
+        ]
+    }
+}
+```  
+
 ```
 Array
 (
