@@ -18,6 +18,7 @@ return [
             // DB columns to export
             'id',
             'utm',
+            'rit_c2_status',
             'created_at',
         ],
     ],
