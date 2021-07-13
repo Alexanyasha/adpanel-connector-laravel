@@ -42,17 +42,6 @@ class AdpanelConnectorServiceProvider extends ServiceProvider {
 
         $this->loadTranslationsFrom(__DIR__ . '/translations', 'adpanel_connector');
 
-        try {
-        
-            Artisan::call('vendor:publish', [
-                '--provider' => 'DesignCoda\AdpanelConnector\AdpanelConnectorServiceProvider', 
-                '--tag' => 'adpanel-connector',
-                '--force' => true,
-            ]);
-        
-        } catch (\Exception $e) {
-            logger($e->getFile() . ' ' . $e->getLine() . ': ' . $e->getMessage());
-        }
     }
 
 }
