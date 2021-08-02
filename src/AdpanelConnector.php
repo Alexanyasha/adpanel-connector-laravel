@@ -30,7 +30,7 @@ class AdpanelConnector
 
             try {
                 
-                $table['data'] = $temp_data->get();  
+                $table['data'] = $temp_data->get();
 
             } catch (\Exception $e) {
                 $table['data'] = null;
@@ -80,6 +80,10 @@ class AdpanelConnector
             $query->where('created_at', '<=', date('Y-m-d H:i:s', strtotime($params['to'])));
         }
 
+        if(isset($params['filters'])) {
+            $query = $this->applyQueryFilters($query, $params['filters'], $table);
+        }
+
         if(isset($params['order_by'])) {
             if(! Schema::connection('mysql')->hasColumn($table['name'], $params['order_by'])) {
                 $table['errors'][] = trans('adpanel_connector::main.error.no_column', [
@@ -88,6 +92,44 @@ class AdpanelConnector
                 ]);
             } else {
                 $query->orderBy($params['order_by'], (isset($params['desc']) && $params['desc'] == true ? 'desc' : 'asc'));
+            }
+        }
+
+        return $query;
+    }
+
+    private function applyQueryFilters($query, array $filters, array $table)
+    {
+        foreach($filters as $filter_column => $filter) {
+            $table_column_name = $filter_column;
+            if(isset($table['columns'][$filter_column]) && is_string($table['columns'][$filter_column])) {
+                $table_column_name = $table['columns'][$filter_column];
+            }
+
+            if(is_array($filter)) {
+                $query->where(function($q) use($table_column_name, $filter, $table) {
+                    $i = 0;
+                    foreach($filter as $f_name => $f_value) {
+                        if(Schema::connection('mysql')->hasColumn($table['name'], $f_name)) {
+                            if($i > 0) {
+                                $q->orWhere($f_name, $f_value);
+                            } else {
+                                $q->where($f_name, $f_value);
+                            }
+                        } else {
+                            if($i > 0) {
+                                $q->orWhere($table_column_name . '->' . $f_name, $f_value);
+                            } else {
+                                $q->where($table_column_name . '->' . $f_name, $f_value);
+                            }
+                        }
+
+                        $i++;
+                    }
+                });
+            } else {
+                //if()
+                $query->where($table_column_name, $filter);
             }
         }
 
