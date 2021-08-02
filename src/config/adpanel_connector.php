@@ -17,8 +17,17 @@ return [
         'requests' => [
             // DB columns to export
             'id',
-            'utm',
-            'rit_c2_status',
+            // Group of columns as one column
+            'utm' => [
+                'utm_source',
+                'utm_campaign',
+                'utm_banner',
+                'utm_term',
+                'utm_content',
+                'utm_from',
+            ],
+            // If column's name differs
+            'status' => 'rit_c2_status',
             'created_at',
         ],
     ],

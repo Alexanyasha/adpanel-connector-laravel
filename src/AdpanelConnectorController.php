@@ -12,6 +12,8 @@ class AdpanelConnectorController extends Controller
         $connector = new AdpanelConnector;
 
         $response = $connector->getData($request->all());
-        return response()->json($response, 200);
+        
+        return response()->json($response, 200, ['Content-Type' => 'application/json;charset=UTF-8', 'Charset' => 'utf-8'],
+        JSON_UNESCAPED_UNICODE);
     }
 }

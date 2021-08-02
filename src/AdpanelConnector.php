@@ -36,6 +36,8 @@ class AdpanelConnector
                 $table['data'] = null;
                 logger($e->getFile() . ' ' . $e->getLine() . ': ' . $e->getMessage());
             }
+
+            $table['data'] = $this->formData($table['data']->toArray(), $table['columns']);
         }
 
         return $data;
@@ -44,6 +46,15 @@ class AdpanelConnector
     private function checkColumns(array &$table) :array
     {
         $columns = $table['columns'];
+        foreach($columns as $key => $column) {
+            if(is_array($column)) {
+                $push = $column;
+                unset($columns[$key]);
+
+                array_push($columns, ...$push);
+            }
+        }
+
         foreach($columns as $key => $column) {
             if(! Schema::connection('mysql')->hasColumn($table['name'], $column)) {
                 $table['errors'][] = trans('adpanel_connector::main.error.no_column', [
@@ -82,5 +93,43 @@ class AdpanelConnector
 
         return $query;
     }
+
+    private function formData(array $data, array $columns) :array
+    {
+        $formatted_data = [];
+        
+        foreach($data as $row) {
+            $formatted_data[] = $this->formRowData($row, $columns);
+        }
+
+        return $formatted_data;
+    }
     
+    private function formRowData($data, array $columns) :array
+    {
+        $formatted_row = [];
+        
+        foreach($columns as $column_name => $column) {
+            if(is_array($column)) {
+                $col_array = [];
+                foreach($column as $col) {
+                    if(! empty($data->{$col})) {
+                        $col_array[$col] = $data->{$col};
+                    }
+                }
+                
+                $formatted_row[$column_name] = $col_array;
+            } else {
+
+                if(! is_numeric($column_name)) {
+                    $formatted_row[$column_name] = $data->{$column};
+                } else {
+                    $formatted_row[$column] = $data->{$column};
+                }
+
+            }
+        }
+        
+        return $formatted_row;
+    }
 }
