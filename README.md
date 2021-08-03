@@ -77,7 +77,7 @@ To receive data only valid auth token is required. But you can pass additional p
 `to` - created_at column until Y-m-d inclusive. Must be valid date    
 `order_by` - ordering column. Ignoring if column not exists. Must be string  
 `desc` - is used only with `order_by`. Must be boolean  
-`filters` - fields for filtering query. Must be array (e.g. filters['utm']['utm_source']) for field `utm_source` or `utm->utm_source` (JSON))  
+`filters` - fields for filtering query. Must be array (e.g. filters['utm']['utm_source'][]) for field `utm_source` or `utm->utm_source` (JSON))  
   
 ## Параметры запросов  
 Чтобы получить данные достаточно только валидного токена. Но также можно передавать дополнительные параметры для запроса, например, сортировку   

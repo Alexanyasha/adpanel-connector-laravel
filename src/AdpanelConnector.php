@@ -30,7 +30,7 @@ class AdpanelConnector
 
             try {
                 
-                $table['data'] = $temp_data->get();
+                $table['data'] = $temp_data->get();                
 
             } catch (\Exception $e) {
                 $table['data'] = null;
@@ -98,7 +98,7 @@ class AdpanelConnector
         return $query;
     }
 
-    private function applyQueryFilters($query, array $filters, array $table)
+    private function applyQueryFilters($query, array $filters, array &$table)
     {
         foreach($filters as $filter_column => $filter) {
             $table_column_name = $filter_column;
@@ -107,29 +107,59 @@ class AdpanelConnector
             }
 
             if(is_array($filter)) {
-                $query->where(function($q) use($table_column_name, $filter, $table) {
+                $query->where(function($q) use($table_column_name, $filter, &$table) {
                     $i = 0;
                     foreach($filter as $f_name => $f_value) {
-                        if(Schema::connection('mysql')->hasColumn($table['name'], $f_name)) {
-                            if($i > 0) {
-                                $q->orWhere($f_name, $f_value);
+                        if(is_array($f_value)) {
+                            if(Schema::connection('mysql')->hasColumn($table['name'], $f_name)) {
+                                if($i > 0) {
+                                    $q->orWhereIn($f_name, $f_value);
+                                } else {
+                                    $q->whereIn($f_name, $f_value);
+                                }
+                            } elseif(Schema::connection('mysql')->hasColumn($table['name'], $table_column_name)) {
+                                if($i > 0) {
+                                    $q->orWhereIn($table_column_name . '->' . $f_name, $f_value);
+                                } else {
+                                    $q->whereIn($table_column_name . '->' . $f_name, $f_value);
+                                }
                             } else {
-                                $q->where($f_name, $f_value);
+                                $table['errors'][] = trans('adpanel_connector::main.error.filter') . ' ' . trans('adpanel_connector::main.error.no_columns', [
+                                    'columns' => $table_column_name . ', ' . $table_column_name . '->' . $f_name,
+                                    'table' => $table['name'],
+                                ]);
                             }
                         } else {
-                            if($i > 0) {
-                                $q->orWhere($table_column_name . '->' . $f_name, $f_value);
+                            if(Schema::connection('mysql')->hasColumn($table['name'], $f_name)) {
+                                if($i > 0) {
+                                    $q->orWhere($f_name, $f_value);
+                                } else {
+                                    $q->where($f_name, $f_value);
+                                }
+                            } elseif(Schema::connection('mysql')->hasColumn($table['name'], $table_column_name)) {
+                                if($i > 0) {
+                                    $q->orWhere($table_column_name . '->' . $f_name, $f_value);
+                                } else {
+                                    $q->where($table_column_name . '->' . $f_name, $f_value);
+                                }
                             } else {
-                                $q->where($table_column_name . '->' . $f_name, $f_value);
+                                $table['errors'][] = trans('adpanel_connector::main.error.filter') . ' ' . trans('adpanel_connector::main.error.no_columns', [
+                                    'columns' => $table_column_name . ', ' . $table_column_name . '->' . $f_name,
+                                    'table' => $table['name'],
+                                ]);
                             }
                         }
 
                         $i++;
                     }
                 });
-            } else {
-                //if()
+            } elseif(Schema::connection('mysql')->hasColumn($table['name'], $table_column_name)) {
                 $query->where($table_column_name, $filter);
+            } else {
+                $table['errors'][] = trans('adpanel_connector::main.error.no_column', [
+                    'column' => $table_column_name,
+                    'table' => $table['name'],
+                ]);
             }
         }
 

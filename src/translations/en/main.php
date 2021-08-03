@@ -3,7 +3,9 @@
 return [
 
     'error' => [
+        'filter' => 'Filter error.',
         'no_column' => 'Column :column not exists in table :table.',
+        'no_columns' => 'Columns :columns not exists in table :table.',
     ],
 
     'label' => [

@@ -3,7 +3,9 @@
 return [
 
     'error' => [
+        'filter' => 'Ошибка в фильтрах.',
         'no_column' => 'Столбец «:column» в таблице «:table» не найден.',
+        'no_columns' => 'Столбцы «:columns» в таблице «:table» не найдены.',
     ],
 
     'label' => [
