@@ -19,7 +19,7 @@ composer require designcoda/adpanel-connector-laravel
 
 1. Run publishing command to copy config file to config folder.  
 ```  
-php artisan vendor:publish --provider="DesignCoda\AdpanelConnector\AdpanelConnectorServiceProvider" --tag="adpanel-connector" --force  
+php artisan vendor:publish --provider="DesignCoda\AdpanelConnector\AdpanelConnectorServiceProvider" --tag="adpanel-connector"  
 ```  
 
 
@@ -77,6 +77,7 @@ To receive data only valid auth token is required. But you can pass additional p
 `to` - created_at column until Y-m-d inclusive. Must be valid date    
 `order_by` - ordering column. Ignoring if column not exists. Must be string  
 `desc` - is used only with `order_by`. Must be boolean  
+`filters` - fields for filtering query. Must be array (e.g. filters['utm']['utm_source']) for field `utm_source` or `utm->utm_source` (JSON))  
   
 ## Параметры запросов  
 Чтобы получить данные достаточно только валидного токена. Но также можно передавать дополнительные параметры для запроса, например, сортировку   
@@ -84,6 +85,7 @@ To receive data only valid auth token is required. But you can pass additional p
 `to` - столбец created_at, до указанной даты Y-m-d включительно. Должен быть валидной датой  
 `order_by` - столбец сортировки. Если столбец не существует, параметр игнорируется. Должен быть строкой  
 `desc` - используется только в связке с `order_by`. Должен быть булевым  
+`filters` - поля для фильтрации запроса. Должны быть массивом (например, filters['utm']['utm_source']) для поля `utm_source` или `utm->utm_source` (JSON))  
 
 
 ## Response examples  
