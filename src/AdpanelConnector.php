@@ -100,66 +100,102 @@ class AdpanelConnector
 
     private function applyQueryFilters($query, array $filters, array &$table)
     {
-        foreach($filters as $filter_column => $filter) {
-            $table_column_name = $filter_column;
-            if(isset($table['columns'][$filter_column]) && is_string($table['columns'][$filter_column])) {
-                $table_column_name = $table['columns'][$filter_column];
-            }
+        foreach($filters as $filter_type => $filter_array) {
+            foreach($filter_array as $filter_column => $filter) {
 
-            if(is_array($filter)) {
-                $query->where(function($q) use($table_column_name, $filter, &$table) {
-                    $i = 0;
-                    foreach($filter as $f_name => $f_value) {
-                        if(is_array($f_value)) {
-                            if(Schema::connection('mysql')->hasColumn($table['name'], $f_name)) {
-                                if($i > 0) {
-                                    $q->orWhereIn($f_name, $f_value);
+                $table_column_name = $filter_column;
+                if(isset($table['columns'][$filter_column]) && is_string($table['columns'][$filter_column])) {
+                    $table_column_name = $table['columns'][$filter_column];
+                }
+                
+                if(is_array($filter)) {
+                    $query->where(function($q) use($table_column_name, $filter, &$table, $filter_type) {
+                        $i = 0;
+                        foreach($filter as $f_name => $f_value) {
+
+                            if(is_array($f_value)) {
+                                if(Schema::connection('mysql')->hasColumn($table['name'], $f_name)) {
+                                    if($filter_type == 'like') {
+                                        if($i > 0) {
+                                            $q->orWhereRaw($f_name . " regexp '" . implode('|', $f_value) . "'");
+                                        } else {
+                                            $q->whereRaw($f_name . " regexp '" . implode('|', $f_value) . "'");
+                                        }
+                                    } else {
+                                        if($i > 0) {
+                                            $q->orWhereIn($f_name, $f_value);
+                                        } else {
+                                            $q->whereIn($f_name, $f_value);
+                                        }
+                                    }
+                                } elseif(Schema::connection('mysql')->hasColumn($table['name'], $table_column_name)) {
+                                    if($filter_type == 'like') {
+                                        if($i > 0) {
+                                            $q->orWhereRaw("`" . $table_column_name . "`->'$.\"" . $f_name . "\"' regexp '" . implode('|', $f_value) . "'");
+                                        } else {
+                                            $q->whereRaw("`" . $table_column_name . "`->'$.\"" . $f_name . "\"' regexp '" . implode('|', $f_value) . "'");
+                                        }
+                                    } else {
+                                        if($i > 0) {
+                                            $q->orWhereIn($table_column_name . '->' . $f_name, $f_value);
+                                        } else {
+                                            $q->whereIn($table_column_name . '->' . $f_name, $f_value);
+                                        }
+                                    }
                                 } else {
-                                    $q->whereIn($f_name, $f_value);
-                                }
-                            } elseif(Schema::connection('mysql')->hasColumn($table['name'], $table_column_name)) {
-                                if($i > 0) {
-                                    $q->orWhereIn($table_column_name . '->' . $f_name, $f_value);
-                                } else {
-                                    $q->whereIn($table_column_name . '->' . $f_name, $f_value);
+                                    $table['errors'][] = trans('adpanel_connector::main.error.filter') . ' ' . trans('adpanel_connector::main.error.no_columns', [
+                                        'columns' => $table_column_name . ', ' . $table_column_name . '->' . $f_name,
+                                        'table' => $table['name'],
+                                    ]);
                                 }
                             } else {
-                                $table['errors'][] = trans('adpanel_connector::main.error.filter') . ' ' . trans('adpanel_connector::main.error.no_columns', [
-                                    'columns' => $table_column_name . ', ' . $table_column_name . '->' . $f_name,
-                                    'table' => $table['name'],
-                                ]);
-                            }
-                        } else {
-                            if(Schema::connection('mysql')->hasColumn($table['name'], $f_name)) {
-                                if($i > 0) {
-                                    $q->orWhere($f_name, $f_value);
+                                if(Schema::connection('mysql')->hasColumn($table['name'], $f_name)) {
+                                    if($filter_type == 'like') {
+                                        if($i > 0) {
+                                            $q->orWhere($f_name, 'like', '%' . $f_value . '%');
+                                        } else {
+                                            $q->where($f_name, 'like', '%' . $f_value . '%');
+                                        }
+                                    } else {
+                                        if($i > 0) {
+                                            $q->orWhere($f_name, $f_value);
+                                        } else {
+                                            $q->where($f_name, $f_value);
+                                        }
+                                    }
+                                } elseif(Schema::connection('mysql')->hasColumn($table['name'], $table_column_name)) {
+                                    if($filter_type == 'like') {
+                                        if($i > 0) {
+                                            $q->orWhere($table_column_name . '->' . $f_name, 'like', '%' . $f_value . '%');
+                                        } else {
+                                            $q->where($table_column_name . '->' . $f_name, 'like', '%' . $f_value . '%');
+                                        }
+                                    } else {
+                                        if($i > 0) {
+                                            $q->orWhere($table_column_name . '->' . $f_name, $f_value);
+                                        } else {
+                                            $q->where($table_column_name . '->' . $f_name, $f_value);
+                                        }
+                                    }
                                 } else {
-                                    $q->where($f_name, $f_value);
+                                    $table['errors'][] = trans('adpanel_connector::main.error.filter') . ' ' . trans('adpanel_connector::main.error.no_columns', [
+                                        'columns' => $table_column_name . ', ' . $table_column_name . '->' . $f_name,
+                                        'table' => $table['name'],
+                                    ]);
                                 }
-                            } elseif(Schema::connection('mysql')->hasColumn($table['name'], $table_column_name)) {
-                                if($i > 0) {
-                                    $q->orWhere($table_column_name . '->' . $f_name, $f_value);
-                                } else {
-                                    $q->where($table_column_name . '->' . $f_name, $f_value);
-                                }
-                            } else {
-                                $table['errors'][] = trans('adpanel_connector::main.error.filter') . ' ' . trans('adpanel_connector::main.error.no_columns', [
-                                    'columns' => $table_column_name . ', ' . $table_column_name . '->' . $f_name,
-                                    'table' => $table['name'],
-                                ]);
                             }
+
+                            $i++;
                         }
-
-                        $i++;
-                    }
-                });
-            } elseif(Schema::connection('mysql')->hasColumn($table['name'], $table_column_name)) {
-                $query->where($table_column_name, $filter);
-            } else {
-                $table['errors'][] = trans('adpanel_connector::main.error.no_column', [
-                    'column' => $table_column_name,
-                    'table' => $table['name'],
-                ]);
+                    });
+                } elseif(Schema::connection('mysql')->hasColumn($table['name'], $table_column_name)) {
+                    $query->where($table_column_name, $filter);
+                } else {
+                    $table['errors'][] = trans('adpanel_connector::main.error.no_column', [
+                        'column' => $table_column_name,
+                        'table' => $table['name'],
+                    ]);
+                }
             }
         }
 
